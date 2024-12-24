@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .quiz-container {
+      max-width: 600px;
+      margin: auto;
+    }
+    .question {
+      margin-bottom: 15px;
+    }
+    .options {
+      margin-left: 20px;
+    }
+    .options label {
+      display: block;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2>Quiz</h2>
+    <form id="quizForm">
+      <div id="questions"></div>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+  <script>
+    async function fetchQuestions() {
+      const response = await fetch('http://localhost:8081/questions');
+      const questions = await response.json();
+
+      const questionsDiv = document.getElementById('questions');
+      questions.forEach((q, index) => {
+        const questionBlock = document.createElement('div');
+        questionBlock.classList.add('question');
+        questionBlock.innerHTML = `
+          <p>${index + 1}. ${q.question}</p>
+          <div class="options">
+            ${q.options.map((opt, i) => `
+              <label>
+                <input type="radio" name="q${index}" value="${opt}" required>
+                ${opt}
+              </label>
+            `).join('')}
+          </div>
+        `;
+        questionsDiv.appendChild(questionBlock);
+      });
+    }
+
+    document.getElementById('quizForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(document.getElementById('quizForm'));
+      const answers = Object.fromEntries(formData.entries());
+
+      const response = await fetch('http://localhost:8089/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(answers),
+      });
+
+      const result = await response.json();
+      alert(result.message);
+    });
+
+    fetchQuestions();
+  </script>
+</body>
+</html>
